@@ -1,0 +1,30 @@
+{
+  "name": "vue-spa-boot",
+  "version": "1.0.0",
+  "description": "A multi-module SPA load framework base on vue and vue-router",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuhann/vue-spa-boot.git"
+  },
+  "keywords": [
+    "SPA",
+    "modules",
+    "vue",
+    "vue-router"
+  ],
+  "author": "liuhan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/liuhann/vue-spa-boot/issues"
+  },
+  "homepage": "https://github.com/liuhann/vue-spa-boot#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "vue": "^2.5.16",
+    "vue-router": "^3.0.1"
+  }
+}
