@@ -20,6 +20,7 @@ class BootStrap {
 	 * @param {boolean} [bootOpts.routeContext=false] generate new ctx on each route
 	 * @param {object} [bootOpts.servers] http services locations
 	 * @param {function} [bootOpts.started] trigger on bootstrap complete
+	 * @param {function} [bootOpts.beforeStarted] trigger on bootstrap vue booted
 	 * @param {string} [bootOpts.routeName] 页面加载后默认进入的路由命名
 	 */
 	constructor(bootOpts) {
@@ -28,6 +29,7 @@ class BootStrap {
 		this.mount = bootOpts.mount || '#app';
 		this.servers = bootOpts.servers;
 		this.startCallback = bootOpts.started || function(vm){ };
+		this.beforeStarted = bootOpts.beforeStarted || function(vm) {};
 		this.routeContext = bootOpts.routeContext || false;
 	}
 
@@ -116,14 +118,15 @@ class BootStrap {
 
 		this.attachRouteContext(this.router);
 		// 现在，应用已经启动了！
-		const beforeStarted = await this.beforeStart();
+		const beforeHookResult = await this.beforeStarted();
 
-		if (beforeStarted === true) {
+		if (beforeHookResult === true) {
 			if (this.modules) {
 				await this.loadModules(this.modules);
 			}
+			await this.started();
 		}
-		await this.started();
+
 	}
 
 	async loadModules(modules) {
