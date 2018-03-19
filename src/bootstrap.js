@@ -44,6 +44,7 @@ class BootStrap {
 
 		Vue.mixin({
 			beforeCreate: function() {
+
 			}
 		});
 	}
@@ -55,6 +56,7 @@ class BootStrap {
 	getContext() {
 		const ctx = Object.create(contextProto);
 		ctx.bootstrap = this;
+
 		//Register ctx.servers.xxx
 		if (this.servers) {
 			ctx.servers = {};
@@ -100,15 +102,33 @@ class BootStrap {
 	 * 3. 注册数据模型对象到nt
 	 * 4. 创建和挂载Vue根实例。
 	 * 5. started回调
-	 *
 	 */
 	async startUp() {
 		//1. 处理Vue相关内容
 		await this.configVue();
-		const routes = [];      //模块中定义的路由
+		//2. 创建 router 实例，
+		this.router = new VueRouter({
+			routes: []
+		});
+		this.rootApp.router = this.router;
+		//4. 启动Vue
+		this.app = new Vue(this.rootApp).$mount(this.mount);
 
+		this.attachRouteContext(this.router);
+		// 现在，应用已经启动了！
+		const beforeStarted = await this.beforeStart();
+
+		if (beforeStarted === true) {
+			if (this.modules) {
+				await this.loadModules(this.modules);
+			}
+		}
+		await this.started();
+	}
+
+	async loadModules(modules) {
 		// 依次循环解析每个module
-		for(const module of this.modules) {
+		for(const module of modules) {
 			//2.初始化模块的路由，统一增加到routers之中
 			if (module.routes) {
 				//将模块定义信息(module)写入所属的每个路由之中, 将来在路由进入后可以进行统一处理
@@ -122,20 +142,8 @@ class BootStrap {
 			}
 		}
 
-		//2. 创建 router 实例，
-		this.router = new VueRouter({
-			routes: this.routes
-		});
-		//3. 创建和挂载根实例。
-		// 记得要通过 router 配置参数注入路由，从而让整个应用都有路由功能
-		this.rootApp.router = this.router;
-		this.attachRouteContext(this.router);
-
-		//4. 启动Vue
-		this.app = new Vue(this.rootApp).$mount(this.mount);
-		// 现在，应用已经启动了！
-		await this.started();
 	}
+
 	/**
 	 * 整个app启动完成后的操作。 可以在此处设置， 默认加载的第一页
 	 */
