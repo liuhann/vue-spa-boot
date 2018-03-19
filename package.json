@@ -2,7 +2,7 @@
   "name": "vue-spa-boot",
   "version": "1.0.0",
   "description": "A multi-module SPA load framework base on vue and vue-router",
-  "main": "index.js",
+  "main": "./src/bootstrap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
