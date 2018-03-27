@@ -93,8 +93,7 @@ class BootStrap {
 		this.router = new VueRouter({
 			routes: routes
 		});
-
-		this.rootApp = await this.rootApp();
+		this.rootApp = (await this.rootApp()).default
 		this.rootApp.router = this.router;
 
 		//4. 启动Vue
