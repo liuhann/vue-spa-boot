@@ -84,19 +84,22 @@ class BootStrap {
 		Vue.use(VueRouter);
 		await this.configVue(Vue);
 
+		let routes = [];
+
+		if (this.modules) {
+			routes = await this.loadModules(this.modules);
+		}
+
 		this.router = new VueRouter({
-			routes: []
+			routes: routes
 		});
 
 		this.rootApp = await this.rootApp();
-
 		this.rootApp.router = this.router;
+
 		//4. 启动Vue
 		this.app = new Vue(this.rootApp).$mount(this.mount);
 
-		if (this.modules) {
-			await this.loadModules(this.modules);
-		}
 		//check loading?
 		await this.started();
 	}
@@ -109,11 +112,11 @@ class BootStrap {
 			if (isFunction(def)) {
 				module = await def();
 			}
-			if (module.routes) {
-				[].push.apply(routes, module.routes);
+			if (module.default.routes) {
+				[].push.apply(routes, module.default.routes);
 			}
 		}
-		this.router.addRoutes(routes);
+		return routes;
 	}
 
 	/**
