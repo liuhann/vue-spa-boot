@@ -4,7 +4,9 @@
   "description": "A multi-module SPA load framework base on vue and vue-router",
   "main": "./src/bootstrap.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "npm:pub": "npm set registry https://registry.npmjs.org/",
+    "npm:xbn": "npm set registry http://npm.xbniao.com"
   },
   "repository": {
     "type": "git",
