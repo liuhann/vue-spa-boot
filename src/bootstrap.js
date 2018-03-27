@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-
 import HttpClient from './utils/http-client';
 import contextProto from  './utils/context';
-
 import {isFunction, isPlainObject} from './utils/lang';
 
 /**
@@ -15,22 +11,17 @@ class BootStrap {
 	/**
 	 * @param {object} bootOpts boot options
 	 * @param {array} bootOpts.modules module list
-	 * @param {object} [bootOpts.rootApp={}] root vue
+	 * @param {object|async function} [bootOpts.rootApp={}] root vue
 	 * @param {string} [bootOpts.mount="app"] the html element to mount to
-	 * @param {boolean} [bootOpts.routeContext=false] generate new ctx on each route
 	 * @param {object} [bootOpts.servers] http services locations
 	 * @param {function} [bootOpts.started] trigger on bootstrap complete
-	 * @param {function} [bootOpts.beforeStarted] trigger on bootstrap vue booted
-	 * @param {string} [bootOpts.routeName] 页面加载后默认进入的路由命名
 	 */
 	constructor(bootOpts) {
 		this.rootApp = bootOpts.rootApp || {};
 		this.modules = bootOpts.modules;
 		this.mount = bootOpts.mount || '#app';
 		this.servers = bootOpts.servers;
-		this.startCallback = bootOpts.started || function(vm){ };
-		this.beforeStarted = bootOpts.beforeStarted || function(vm) {};
-		this.routeContext = bootOpts.routeContext || false;
+		this.startCallback = isFunction(bootOpts.started)? bootOpts.started : function(vm){ };
 	}
 
 	/**
@@ -38,12 +29,10 @@ class BootStrap {
 	 * @param router
 	 */
 	attachRouteContext(router) {
-
 		//这个方法在路由组件进入时被触发 这时vue组件还未加载
 		router.beforeEach(async (to, from, next) => {
 			next();
 		});
-
 		Vue.mixin({
 			beforeCreate: function() {
 
@@ -79,8 +68,7 @@ class BootStrap {
 	/**
 	 * 统一配置Vue的参数。
 	 */
-	configVue() {
-		Vue.use(VueRouter);
+	configVue(Vue) {
 		const rootContext = this.getContext();
 		Object.defineProperty(Vue.prototype, 'ctx', {
 			get () { return rootContext }
@@ -96,7 +84,7 @@ class BootStrap {
 	}
 
 	/**
-	 * 实际执行SPA的启动工作。包括以下流程
+	 * Boot vue and load modules (with awaited route)
 	 *
 	 * 0. 处理Vue相关内容
 	 * 1. 加载和解析模块
@@ -106,45 +94,47 @@ class BootStrap {
 	 * 5. started回调
 	 */
 	async startUp() {
-		//1. 处理Vue相关内容
-		await this.configVue();
-		//2. 创建 router 实例，
+		const Vue = await import(/* webpackChunkName: "vue" */'vue');
+		const VueRouter = await import(/* webpackChunkName: "vue" */'vue-router');
+
+		Vue.use(VueRouter);
+		await this.configVue(Vue);
+
 		this.router = new VueRouter({
 			routes: []
 		});
+
+		this.rootApp = await this.rootApp();
+
 		this.rootApp.router = this.router;
 		//4. 启动Vue
 		this.app = new Vue(this.rootApp).$mount(this.mount);
 
 		this.attachRouteContext(this.router);
-		// 现在，应用已经启动了！
-		const beforeHookResult = await this.beforeStarted();
 
+		if (this.modules) {
+			await this.loadModules(this.modules);
+		}
+		//check loading?
+		const beforeHookResult = await this.beforeStarted.call(this, this.app);
 		if (beforeHookResult === true) {
-			if (this.modules) {
-				await this.loadModules(this.modules);
-			}
 			await this.started();
 		}
-
 	}
 
 	async loadModules(modules) {
 		// 依次循环解析每个module
-		for(const module of modules) {
-			//2.初始化模块的路由，统一增加到routers之中
+		const routes = [];
+		for(const def of modules) {
+			let module = def;
+			if (isFunction(def)) {
+				module = await def();
+			}
 			if (module.routes) {
-				//将模块定义信息(module)写入所属的每个路由之中, 将来在路由进入后可以进行统一处理
-				module.routes.forEach(function(route) {
-					if (route.meta == null) {
-						route.meta = {};
-					}
-					route.meta.module = module;
-				});
 				[].push.apply(routes, module.routes);
 			}
 		}
-
+		this.router.addRoutes(routes);
 	}
 
 	/**
