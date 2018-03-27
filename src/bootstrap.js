@@ -25,22 +25,6 @@ class BootStrap {
 	}
 
 	/**
-	 * 处理在路由导航时加入上下文对象， 在组件中可以直接用 this.ctx进行调用
-	 * @param router
-	 */
-	attachRouteContext(router) {
-		//这个方法在路由组件进入时被触发 这时vue组件还未加载
-		router.beforeEach(async (to, from, next) => {
-			next();
-		});
-		Vue.mixin({
-			beforeCreate: function() {
-
-			}
-		});
-	}
-
-	/**
 	 * Making page ctx
 	 * @returns {contextProto}
 	 */
@@ -94,8 +78,8 @@ class BootStrap {
 	 * 5. started回调
 	 */
 	async startUp() {
-		const Vue = await import(/* webpackChunkName: "vue" */'vue');
-		const VueRouter = await import(/* webpackChunkName: "vue" */'vue-router');
+		const Vue = (await import(/* webpackChunkName: "vue" */'vue')).default;
+		const VueRouter = (await import(/* webpackChunkName: "vue" */'vue-router')).default;
 
 		Vue.use(VueRouter);
 		await this.configVue(Vue);
@@ -110,16 +94,11 @@ class BootStrap {
 		//4. 启动Vue
 		this.app = new Vue(this.rootApp).$mount(this.mount);
 
-		this.attachRouteContext(this.router);
-
 		if (this.modules) {
 			await this.loadModules(this.modules);
 		}
 		//check loading?
-		const beforeHookResult = await this.beforeStarted.call(this, this.app);
-		if (beforeHookResult === true) {
-			await this.started();
-		}
+		await this.started();
 	}
 
 	async loadModules(modules) {
@@ -144,5 +123,4 @@ class BootStrap {
 		await this.startCallback(this.app);
 	}
 }
-
 export default BootStrap;
