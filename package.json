@@ -1,6 +1,6 @@
 {
   "name": "vue-spa-boot",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A multi-module SPA load framework base on vue and vue-router",
   "main": "./src/bootstrap.js",
   "scripts": {
