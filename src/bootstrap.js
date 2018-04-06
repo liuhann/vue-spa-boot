@@ -112,7 +112,7 @@ class BootStrap {
 				module = (await def()).default;
 			}
 			if (module.routes) {
-				[].push.apply(routes, module.default.routes);
+				[].push.apply(routes, module.routes);
 			}
 		}
 		return routes;
