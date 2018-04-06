@@ -109,9 +109,9 @@ class BootStrap {
 		for(const def of modules) {
 			let module = def;
 			if (isFunction(def)) {
-				module = await def();
+				module = (await def()).default;
 			}
-			if (module.default.routes) {
+			if (module.routes) {
 				[].push.apply(routes, module.default.routes);
 			}
 		}
