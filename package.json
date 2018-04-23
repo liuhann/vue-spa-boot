@@ -26,6 +26,7 @@
   "homepage": "https://github.com/liuhann/vue-spa-boot#readme",
   "dependencies": {
     "axios": "^0.18.0",
+    "koa-compose": "^4.0.0",
     "vue": "^2.5.16",
     "vue-router": "^3.0.1"
   }
