@@ -15,6 +15,7 @@ class BootStrap {
 	 * @param {string} [bootOpts.mount="app"] the html element to mount to
 	 * @param {object} [bootOpts.servers] http services locations
 	 * @param {function} [bootOpts.started] trigger on bootstrap complete
+	 * @param {function} [bootOpts.bootCompleted] A list of middle-wares with koa-style which would be trigger like onions
 	 */
 	constructor(bootOpts) {
 		this.rootApp = bootOpts.rootApp || {};
@@ -22,6 +23,7 @@ class BootStrap {
 		this.mount = bootOpts.mount || '#app';
 		this.servers = bootOpts.servers;
 		this.startCallback = isFunction(bootOpts.started)? bootOpts.started : function(vm){ };
+		this.bootCompleted = bootOpts.bootCompleted || [];
 	}
 
 	/**
@@ -122,6 +124,12 @@ class BootStrap {
 	 * 整个app启动完成后的操作。 可以在此处设置， 默认加载的第一页
 	 */
 	async started() {
+		const composed = compose(this.bootCompleted)
+		try {
+			await composed(this.getContext())
+		} catch (err) {
+			console.log('boot complete err:' + err)
+		}
 		await this.startCallback(this.app);
 	}
 }
